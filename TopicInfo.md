@@ -24,6 +24,7 @@
 <a name="bw"></a>
 ## `/base_waypoints`
 - msg Type: [[`Lane`](#L)
+
 ![](Readme_Images/RosTopic/Topic_base_wp.png)
 
 [Back to Table](#table)
