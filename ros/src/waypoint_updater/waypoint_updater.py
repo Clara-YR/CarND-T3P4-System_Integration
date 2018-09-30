@@ -89,7 +89,7 @@ class WaypointUpdater(object):
 
     def publish_waypoints(self, closest_idx):
         # create a new Land msg
-        lane = Land()
+        lane = Lane()
         # its header is the same as the base waypoints header 
         # doesn't really matter, not to be used here
         lane.header = self.base_waypoints.header
