@@ -1,23 +1,21 @@
 #!/usr/bin/env python
-
+import numpy as np
 import rospy
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from styx_msgs.msg import Lane, Waypoint
+from std_msgs.msg import Int32, Float32
+from scipy.spatial import KDTree
 
 import math
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
-
 As mentioned in the doc, you should ideally first implement a version which does not care
 about traffic lights or obstacles.
-
 Once you have created dbw_node, you will update this node to use the status of traffic lights too.
-
 Please note that our simulator also provides the exact location of traffic lights and their
 current status in `/vehicle/traffic_lights` message. You can use this message to build this node
 as well as to verify your TL classifier.
-
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
@@ -27,36 +25,41 @@ LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this n
 class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
+	
+	# TODO: Add other member variables you need below
+        self.pose = None
+        self.base_waypoints = None
+        self.waypoints_2d = None  # 2D points to create KDTree for the base point
+        self.waypoint_tree = None  # KDTree to look up the closet waypoint
+	###rospy.loginfo('Variables Initialized.')        
 
-        # use subscriber to get current pose and base waypoints 
+	# use subscriber to get current pose and base waypoints 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+	###rospy.loginfo('Subscribers Done.')
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         #rospy.Subscriber('/traffic_waypoint', PoseStamped, self.traffic_cb)
         #rospy.Subscriber('/obstacle_waypoint', PoseStamped, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-
-        # TODO: Add other member variables you need below
-        self.pose = None
-        self.base_waypoints = None
-        self.waypoints_2d = None  # 2D points to create KDTree for the base point
-        self.waypoint_tree = None  # KDTree to look up the closet waypoint
+	###rospy.loginfo('Publishers Done.')    
 
         #rospy.spin()
         self.loop()
 
-    def loop():
+    def loop(self):
         """
         control over the publishing frequency
         """
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints:
+            if self.pose and self.base_waypoints and self.waypoint_tree:
                 # Get closest waypoint
+		###rospy.loginfo('To find the closest waypoint ...')
                 closest_waypoint_idx = self.get_closest_waypoint_idx()
                 # the msg will be published to wp follower
+		###rospy.loginfo('To find the ')
                 self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
 
@@ -77,7 +80,7 @@ class WaypointUpdater(object):
 
         # Equation for hyperplane through closest_coords
         cl_vect = np.array(closest_coord)
-        prev_vect = np.array(prey_coord)
+        prev_vect = np.array(prev_coord)
         pos_vect = np.array([x, y])
 
         val = np.dot(cl_vect-prev_vect, pos_vect-cl_vect)
@@ -85,16 +88,18 @@ class WaypointUpdater(object):
         if val > 0:  # means the car pose is in front of the closest waypoint
             # choose the next waypoint as the cloeset one
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
+	#rospy.loginfo('Get the Closest index:%s', closest_idx)
         return closest_idx
 
     def publish_waypoints(self, closest_idx):
-        # create a new Land msg
+        # create a new Lane msg
         lane = Lane()
         # its header is the same as the base waypoints header 
         # doesn't really matter, not to be used here
         lane.header = self.base_waypoints.header
         # extract 200 item from the base waypoints
         lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx+LOOKAHEAD_WPS]
+	###rospy.loginfo('Publish waypoints ...')
         self.final_waypoints_pub.publish(lane)
 
 
@@ -107,6 +112,7 @@ class WaypointUpdater(object):
             store current position of the car from topic /current_pose in self.pose
         """
         self.pose = msg
+	###rospy.loginfo('current_pose received.')
 
     def waypoints_cb(self, waypoints):
         # TODO: Implement
@@ -125,6 +131,8 @@ class WaypointUpdater(object):
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             # construct data structure KDTree to look up the cloest point 
             self.waypoint_tree = KDTree(self.waypoints_2d)
+	    ###rospy.loginfo('KDTree Done.')
+	###rospy.loginfo('base_waypoints stored.')
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
