@@ -27,7 +27,7 @@ that we have created in the `__init__` function.
 
 class DBWNode(object):
     def __init__(self):
-        rospy.init_node('dbw_node', log_level=rospy.DEBUG)
+        rospy.init_node('dbw_node')
 
         # car parameters
         vehicle_mass = rospy.get_param('~vehicle_mass', 1736.35)
@@ -60,12 +60,12 @@ class DBWNode(object):
                                     max_lat_accel=max_lat_accel,
                                     max_steer_angle=max_steer_angle)
 
-		self.current_vel = None
-		self.curr_ang_vel = None
-		self.dbw_enabled = None
-		self.linear_vel = None
-		self.angular_vel = None
-		self.throttle = self.steering = self.brake = 0
+	self.current_vel = None
+	self.curr_ang_vel = None
+	self.dbw_enabled = None
+	self.linear_vel = None
+	self.angular_vel = None
+	self.throttle = self.steering = self.brake = 0
 
         # TODO: Subscribe to all the topics you need to
         rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
@@ -93,7 +93,6 @@ class DBWNode(object):
                                                                                    self.dbw_enabled)
 		#rospy.loginfo('Get throttle, brake, steering for controller')
             if self.dbw_enabled:
-		rospy.loginfo('DBW publishes control cmd')
                 self.publish(self.throttle, self.brake, self.steering)
             rate.sleep()
 
