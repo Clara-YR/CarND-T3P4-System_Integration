@@ -48,7 +48,7 @@ class Controller(object):
         	dbw_enabled: DBW status
         """
         if not dbw_enabled:
-		# Turn off/Reset PID controller
+        	# Turn off/Reset PID controller
         	self.throttle_controller.reset()
         	return 0., 0., 0.
 
@@ -69,7 +69,7 @@ class Controller(object):
     	sample_time = current_time - self.last_time
     	self.last_time = current_time
 
-    	throttle = self.throttle_controller.setp(vel_error, sample_time)
+    	throttle = self.throttle_controller.step(vel_error, sample_time)
     	brake = 0
 
     	if linear_vel == 0. and current_vel < 0.1:
