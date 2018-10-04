@@ -20,7 +20,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+MAX_DECEL = .5 #
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -28,22 +28,24 @@ class WaypointUpdater(object):
 	
 	# TODO: Add other member variables you need below
         self.pose = None
-        self.base_waypoints = None
+        self.base_lane = None
+        self.stopline_wp_idx = None
         self.waypoints_2d = None  # 2D points to create KDTree for the base point
         self.waypoint_tree = None  # KDTree to look up the closet waypoint
-	###rospy.loginfo('Variables Initialized.')        
+	    ###rospy.loginfo('Variables Initialized.')        
 
 	# use subscriber to get current pose and base waypoints 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-	###rospy.loginfo('Subscribers Done.')
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+	    ###rospy.loginfo('Subscribers Done.')
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         #rospy.Subscriber('/traffic_waypoint', PoseStamped, self.traffic_cb)
         #rospy.Subscriber('/obstacle_waypoint', PoseStamped, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-	###rospy.loginfo('Publishers Done.')    
+	    ###rospy.loginfo('Publishers Done.')    
 
         #rospy.spin()
         self.loop()
@@ -54,12 +56,12 @@ class WaypointUpdater(object):
         """
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints and self.waypoint_tree:
+            if self.pose and self.base_lane and self.waypoint_tree:
                 # Get closest waypoint
-		###rospy.loginfo('To find the closest waypoint ...')
+	            ###rospy.loginfo('To find the closest waypoint ...')
                 closest_waypoint_idx = self.get_closest_waypoint_idx()
                 # the msg will be published to wp follower
-		###rospy.loginfo('To find the ')
+	            ###rospy.loginfo('To find the ')
                 self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
 
@@ -88,20 +90,69 @@ class WaypointUpdater(object):
         if val > 0:  # means the car pose is in front of the closest waypoint
             # choose the next waypoint as the cloeset one
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
-	#rospy.loginfo('Get the Closest index:%s', closest_idx)
+        #rospy.loginfo('Get the Closest index:%s', closest_idx)
         return closest_idx
 
-    def publish_waypoints(self, closest_idx):
+    def publish_waypoints(self):
+        final_lane = self.generate_lane()
+	    ###rospy.loginfo('Publish waypoints ...')
+        self.final_waypoints_pub.publish(final_lane)
+
+    def generate_lane():
+        '''
+        take the wayopints and update their velocity base on 
+        how we want the car to behave
+        '''
         # create a new Lane msg
         lane = Lane()
-        # its header is the same as the base waypoints header 
-        # doesn't really matter, not to be used here
-        lane.header = self.base_waypoints.header
-        # extract 200 item from the base waypoints
-        lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx+LOOKAHEAD_WPS]
-	###rospy.loginfo('Publish waypoints ...')
-        self.final_waypoints_pub.publish(lane)
 
+        # splice the base waypoints
+        closest_idx = self.get_closest_waypoint_idx()
+        farthest_idx = closest_idx + LOOKAHEAD_WPS
+        base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
+        
+        # if detect no TL concerned 
+        if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
+            # no need to make any modifications, just publish the waypoints directly
+            lane.waypoints = base_waypoints
+        else:
+            lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
+
+    def decelerate_waypoints(self, waypoints, closest_idx):
+        '''
+        create some new waypoints msg types.
+        Args:
+            waypoints: a slice of the base waypoints from the closest_idx to farthest_idx
+            closest_idx: the index of the closest waypoint ahead of our vehicle
+        '''
+        # temporary list to store waypoints since we don't want to modify our base wayoints
+        # this msg comes in only once v.s. keep the base waypoints preserved
+        temporary_waypoints = []
+        for i, base_wp in enumerate(waypoints):
+            # create a new waypoint message
+            p = Waypoint()
+            # set the pose to the i-th base waypoint pose
+            # the pose coatians the orientation
+            p.pose = base_wp.pose
+
+            # figure out the stopline index
+            # because the vehicle pose is the exact center of the car
+            # minus 2 or 3 to make the node of the car stop behind the line
+            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0) # Two waypoints back from line so front of car stops at line
+            # waypoint distance of how far away from the TL stop line
+            # distance will return 0 if i > stop_idx
+            dist = self.distance(waypoints, i, stop_idx)
+            vel = math.sqrt(2 * MAX_DECEL * dist)
+            # if the velocity is small enough, just return 0
+            if vel < 1.:
+                vel = 0.
+
+            # the square root vel is large when dist is large
+            # treat the velocity of before as the speed limit
+            p.twist.twist.linear.x = min(vel, base_wp.twist.twist.linear.x)
+            temporary_waypoints.append(p)
+        
+        return temporary_waypoints
 
     def pose_cb(self, msg):
         # TODO: Implement
@@ -112,7 +163,7 @@ class WaypointUpdater(object):
             store current position of the car from topic /current_pose in self.pose
         """
         self.pose = msg
-	###rospy.loginfo('current_pose received.')
+	    ###rospy.loginfo('current_pose received.')
 
     def waypoints_cb(self, waypoints):
         # TODO: Implement
@@ -124,19 +175,20 @@ class WaypointUpdater(object):
             apply KDTree to self.waypoint_tree
         """
         # latched subscriber, once called, doesn't send waypoints anymore 
-        self.base_waypoints = waypoints
+        self.base_lane = waypoints
         # ensure the self.waypoints_2D is initialized before the subcriber is
         if not self.waypoints_2d:
             # get (x,y) for each waypoint
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             # construct data structure KDTree to look up the cloest point 
             self.waypoint_tree = KDTree(self.waypoints_2d)
-	    ###rospy.loginfo('KDTree Done.')
-	###rospy.loginfo('base_waypoints stored.')
+	        ###rospy.loginfo('KDTree Done.')
+	    ###rospy.loginfo('base_waypoints stored.')
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
-        pass
+        # stopline waypoint index(int32)
+        self.stopline_wp_idx = msg.data
 
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
@@ -149,9 +201,15 @@ class WaypointUpdater(object):
         waypoints[waypoint].twist.twist.linear.x = velocity
 
     def distance(self, waypoints, wp1, wp2):
+        '''
+        return:
+            a linear piecewise distance from wp1 to wp2
+            if wp1 > wp2, return 0
+        '''
         dist = 0
         dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2  + (a.z-b.z)**2)
         for i in range(wp1, wp2+1):
+            # Iterate through and add up the distances(only the line segments between waypoints)
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
