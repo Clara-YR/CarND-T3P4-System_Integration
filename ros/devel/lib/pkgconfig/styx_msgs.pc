@@ -1,0 +1,8 @@
+prefix=/home/student/000/ros/devel
+
+Name: styx_msgs
+Description: Description of styx_msgs
+Version: 0.0.0
+Cflags: -I/home/student/000/ros/devel/include
+Libs: -L/home/student/000/ros/devel/lib 
+Requires: 
