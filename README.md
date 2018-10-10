@@ -1,5 +1,8 @@
 ![](Readme_Images/code_structure.png)
 
+- [More information about the message type of each Topic](TopicInfo.md)
+- [Notes about Darknet_ros Node](DarknetInfo.md)
+
 ## Waypoint Updater
 ![](Readme_Images/wp_updater.png)
 
@@ -48,8 +51,6 @@
 ### Publish Topic:
 `/traffic_waypoint`
 
-
-[More information about the message type of each Topic](TopicInfo.md)
 
 ## Darknet
 ### launch.tcl
