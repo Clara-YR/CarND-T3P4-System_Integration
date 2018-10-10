@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import Int32
+from scipy.spatial import KDTree
 from geometry_msgs.msg import PoseStamped, Pose
 from styx_msgs.msg import TrafficLightArray, TrafficLight
 from styx_msgs.msg import Lane
@@ -10,6 +11,11 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+
+imoprt numpy as np
+import os
+from darknet_ros_msgs.msg import BoundingBox
+from darknet_ros_msgs.msg import BoundingBoxes
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -37,6 +43,9 @@ class TLDetector(object):
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
         sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
+        # darknet_ros node that handle object detection (in our case, traffict light)
+        sub5 = rospy.Subscriber('/darknet_ros/bounding_boxes', BoundingBoxes, self.tl_detection_cb)
+        
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
@@ -52,6 +61,12 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        
+        self.counter = 0
+        self.save_for_train = True
+        
+        # if set to 1, we are in simulator mode. 0 in real road
+        self.sim_mode = rospy.get_param('/simulator_mode')
 
         rospy.spin()
 
@@ -124,6 +139,30 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         
         self.state_count += 1
+       
+    def tl_detection_cb(self, msg):
+        '''
+        Detector the traffic state
+        '''
+        prob = 0.3
+        if int(self.sim_mode) == 1:  # in simulator mode
+            prob = 0.85
+        
+        for box in msg.bounding_boxes:
+            if str(box.Class) == 'traffic light' and box.probability >= prob:
+                cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+                light_image= cv_image[box.ymin:box.ymax, box.xmin:box.xmax]
+                if self.save_for_train:
+                    dir_name = './img/'
+                    if not os.path.exists(os.path.dirname(dir_name)):
+                        os.makedirs(os.path.dirname(dir_name))
+                        
+                    if int(self.sim_mode) == 1:
+                        cv2.imwrite(dir_name + 'imagett' + str(self.counter) + '.png', light_image)
+                    else:
+                        cv2.imwrite(dir_name + 'image' + str(self.counter) + '.png', light_image)
+                    self.counter += 1
+                self.light_classification.detect_state(light_image)
 
     def get_closest_waypoint(self, x, y，ahead=True):
         """Identifies the closest path waypoint to the given position
@@ -166,6 +205,9 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        # For testing, just return the light state
+        #return light.state
+        
         if(not self.has_image):
             self.prev_light_loc = None
             return False
