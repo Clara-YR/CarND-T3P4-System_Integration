@@ -1,5 +1,27 @@
 ![](Readme_Images/code_structure.png)
 
+## Usage
+1. Clone the project repository
+	
+	```
+	git clone --recursive https://github.com/Clara-YR/CarND-T3P4-System_Integration 000
+	```
+2. Install python dependencies
+	
+	```
+	cd 000
+	pip install -r requirements.txt
+	```
+3. Make and run styx
+	
+	```
+	cd ros
+	catkin_make -DMAKE_BUILD_TYPE=Release
+	source devel/setup.sh
+	rosluanch launch/styx.launch
+	```
+4. Run the simulator
+
 - [More information about the message type of each Topic](TopicInfo.md)
 - [Notes about Darknet_ros Node](DarknetInfo.md)
 
