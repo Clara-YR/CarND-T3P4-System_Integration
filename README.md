@@ -18,7 +18,7 @@
 	cd ros
 	catkin_make -DMAKE_BUILD_TYPE=Release
 	source devel/setup.sh
-	rosluanch launch/styx.launch
+	roslaunch launch/styx.launch
 	```
 	
 	If this error arise
