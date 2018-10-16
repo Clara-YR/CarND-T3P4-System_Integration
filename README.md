@@ -20,6 +20,16 @@
 	source devel/setup.sh
 	rosluanch launch/styx.launch
 	```
+	
+	If this error arise
+	![](Readme_Images/error.png)
+	run the commands below before `catkin_make`:
+	
+	```
+	apt-get update
+	apt install ros-kinetic-dbw-mkz-msgs
+	```
+	
 4. Run the simulator
 
 ## Strucure
