@@ -6,28 +6,27 @@
 	```
 	git clone --recursive https://github.com/Clara-YR/CarND-T3P4-System_Integration 000
 	```
-2. Install python dependencies
+2. Install python&catkin dependencies
 	
 	```
+	# install pip dependencies
 	cd 000
 	pip install -r requirements.txt
+	
+	# install dbw_mkz_msgs package
+	apt-get update
+	apt install ros-kinetic-dbw-mkz-msgs
+
+	# install catkin_tools package to use catkin_build
+	sudo apt-get install python-catkin-tools
 	```
 3. Make and run styx
 	
 	```
 	cd ros
-	catkin_make -DMAKE_BUILD_TYPE=Release
+	catkin_make -DCMAKE_BUILD_TYPE=Release
 	source devel/setup.sh
 	roslaunch launch/styx.launch
-	```
-	
-	If this error arise
-	![](Readme_Images/error.png)
-	run the commands below before `catkin_make`:
-	
-	```
-	apt-get update
-	apt install ros-kinetic-dbw-mkz-msgs
 	```
 	
 4. Run the simulator
