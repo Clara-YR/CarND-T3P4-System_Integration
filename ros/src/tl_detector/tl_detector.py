@@ -68,7 +68,17 @@ class TLDetector(object):
         # if set to 1, we are in simulator mode. 0 in real road
         self.sim_mode = rospy.get_param('/simulator_mode')
 
-        rospy.spin()
+        self.loop()
+
+    def loop(self):
+        '''
+        control over the publishing frequency
+        '''
+        rate = rospy.Rate(50)
+        while not rospy.is_shutdown():
+            if self.pose and self.waypoints and self.waypoint_tree:
+                self.publish_tf_waypoint()
+            rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -108,16 +118,16 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
-        self.has_image = True
         self.camera_image = msg 
-        light_wp, state = self.process_traffic_lights()
 
+    def publish_tf_waypoint(self):
         '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
+        light_wp, state = self.process_traffic_lights()
         # If state change, update state and reset state_count
         if self.state != state:
             self.state_count = 0
@@ -208,7 +218,7 @@ class TLDetector(object):
         # For testing, just return the light state
         #return light.state
         
-        if(not self.has_image):
+        if(not self.camera_image):
             self.prev_light_loc = None
             return False
 
