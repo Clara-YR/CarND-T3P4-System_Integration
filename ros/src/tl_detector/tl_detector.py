@@ -12,7 +12,7 @@ import tf
 import cv2
 import yaml
 
-imoprt numpy as np
+import numpy as np
 import os
 from darknet_ros_msgs.msg import BoundingBox
 from darknet_ros_msgs.msg import BoundingBoxes
@@ -21,7 +21,7 @@ STATE_COUNT_THRESHOLD = 3
 
 class TLDetector(object):
     def __init__(self):
-        rospy.init_node('tl_detector')
+        rospy.init_node('tl_detector', log_level=rospy.DEBUG)
 
         self.pose = None
         self.base_waypoints = None
