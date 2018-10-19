@@ -1,0 +1,99 @@
+student@udacity:~/team/ros$ catkin_make -DCMAKE_BUILD_TYPE=Release
+Base path: /home/student/team/ros
+Source space: /home/student/team/ros/src
+Build space: /home/student/team/ros/build
+Devel space: /home/student/team/ros/devel
+Install space: /home/student/team/ros/install
+####
+#### Running command: "cmake /home/student/team/ros/src -DCMAKE_BUILD_TYPE=Release -DCATKIN_DEVEL_PREFIX=/home/student/team/ros/devel -DCMAKE_INSTALL_PREFIX=/home/student/team/ros/install -G Unix Makefiles" in "/home/student/team/ros/build"
+####
+-- Using CATKIN_DEVEL_PREFIX: /home/student/team/ros/devel
+-- Using CMAKE_PREFIX_PATH: /opt/ros/kinetic
+-- This workspace overlays: /opt/ros/kinetic
+-- Found PythonInterp: /usr/bin/python (found version "2.7.12") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python
+-- Using Debian Python package layout
+-- Using empy: /usr/bin/empy
+-- Using CATKIN_ENABLE_TESTING: ON
+-- Call enable_testing()
+-- Using CATKIN_TEST_RESULTS_DIR: /home/student/team/ros/build/test_results
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Found gtest sources under '/usr/src/gtest': gtests will be built
+-- Using Python nosetests: /usr/local/bin/nosetests-2.7
+-- catkin 0.7.6
+-- BUILD_SHARED_LIBS is on
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~  traversing 10 packages in topological order:
+-- ~~  - darknet_ros_msgs
+-- ~~  - camera_info_publisher
+-- ~~  - styx
+-- ~~  - styx_msgs
+-- ~~  - darknet_ros
+-- ~~  - twist_controller
+-- ~~  - waypoint_follower
+-- ~~  - waypoint_loader
+-- ~~  - waypoint_updater
+-- ~~  - tl_detector
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- +++ processing catkin package: 'darknet_ros_msgs'
+-- ==> add_subdirectory(darknet_ros/darknet_ros_msgs)
+-- Using these message generators: gencpp;geneus;genlisp;gennodejs;genpy
+-- Generating .msg files for action darknet_ros_msgs/CheckForObjects /home/student/team/ros/src/darknet_ros/darknet_ros_msgs/action/CheckForObjects.action
+-- darknet_ros_msgs: 9 messages, 0 services
+-- +++ processing catkin package: 'camera_info_publisher'
+-- ==> add_subdirectory(camera_info_publisher)
+-- +++ processing catkin package: 'styx'
+-- ==> add_subdirectory(styx)
+-- +++ processing catkin package: 'styx_msgs'
+-- ==> add_subdirectory(styx_msgs)
+-- Using these message generators: gencpp;geneus;genlisp;gennodejs;genpy
+-- styx_msgs: 4 messages, 0 services
+-- +++ processing catkin package: 'darknet_ros'
+-- ==> add_subdirectory(darknet_ros/darknet_ros)
+Darknet path dir = /home/student/team/ros/src/darknet_ros/darknet
+CUDA_TOOLKIT_ROOT_DIR not found or specified
+-- Could NOT find CUDA (missing:  CUDA_TOOLKIT_ROOT_DIR CUDA_NVCC_EXECUTABLE CUDA_INCLUDE_DIRS CUDA_CUDART_LIBRARY) 
+-- Searching for X11...
+-- Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so
+-- Looking for XOpenDisplay in /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so - found
+-- Looking for gethostbyname
+-- Looking for gethostbyname - found
+-- Looking for connect
+-- Looking for connect - found
+-- Looking for remove
+-- Looking for remove - found
+-- Looking for shmat
+-- Looking for shmat - found
+-- Looking for IceConnectionNumber in ICE
+-- Looking for IceConnectionNumber in ICE - found
+-- Found X11: /usr/lib/x86_64-linux-gnu/libX11.so
+--  X11_INCLUDE_DIR: /usr/include
+--  X11_LIBRARIES: /usr/lib/x86_64-linux-gnu/libSM.so/usr/lib/x86_64-linux-gnu/libICE.so/usr/lib/x86_64-linux-gnu/libX11.so/usr/lib/x86_64-linux-gnu/libXext.so
+-- Boost version: 1.58.0
+-- Found the following Boost libraries:
+--   thread
+--   chrono
+--   system
+--   date_time
+--   atomic
+-- Found OpenCV: /opt/ros/kinetic (found version "3.2.0") 
+-- Using these message generators: gencpp;geneus;genlisp;gennodejs;genpy
+-- Checking and downloading yolov2-tiny.weights if needed ...
+-- Checking and downloading yolov3.weights if needed ...
+-- Checking and downloading yolov2.weights if needed ...
+-- ... file does not exist. Downloading now ...
+URL transformed to HTTPS due to an HSTS policy
+--2018-10-18 20:27:17--  https://pjreddie.com/media/files/yolov2.weights
+Resolving pjreddie.com (pjreddie.com)... 128.208.3.39
+Connecting to pjreddie.com (pjreddie.com)|128.208.3.39|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 203934260 (194M) [application/octet-stream]
+Saving to: ‘/home/student/team/ros/src/darknet_ros/darknet_ros/yolo_network_config/weights/yolov2.weights’
